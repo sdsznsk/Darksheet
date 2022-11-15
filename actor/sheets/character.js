@@ -1,6 +1,6 @@
 //import ActorSheet5e from "./base.js";
 //import Actor5e from "../../../../systems/dnd5e/module/actor/entity.js";
-import ActorSheet5eCharacter from "../../../../systems/dnd5e/module/actor/sheets/character.js"
+import ActorSheet5eCharacter from "../../../../systems/dnd5e/module/applications/actor/character-sheet.mjs"
 
 export class ActorSheet5eCharacterDark extends ActorSheet5eCharacter { 
   getData() {
@@ -54,7 +54,7 @@ export class ActorSheet5eCharacterDark extends ActorSheet5eCharacter {
       this._prepareItemToggleState(item);
 
       // Primary Class
-      if ( item.type === "class" ) item.isOriginalClass = ( item._id === this.actor.data.data.details.originalClass );
+      if ( item.type === "class" ) item.isOriginalClass = ( item._id === this.actor.system.details.originalClass );
 
       // Classify items into types
       if ( item.type === "spell" ) arr[1].push(item);
@@ -99,7 +99,7 @@ export class ActorSheet5eCharacterDark extends ActorSheet5eCharacter {
     let totalWeight = 0;
 	let pct = 0;
 	let enc = 1;
-	let maxpct = parseInt(data.data.attributes.inventoryslots) + parseInt(this.actor.data.data.abilities.str.mod);
+	let maxpct = parseInt(data.data.attributes.inventoryslots) + parseInt(this.actor.system.abilities.str.mod);
 	if ( game.settings.get("darksheet", "slotbasedinventory") ) {
     for ( let i of items ) {
       i.data.quantity = i.data.quantity || 0;
@@ -139,12 +139,12 @@ function computeEncumbrance(actorData) {
     const physicalItems = ["weapon", "equipment", "consumable", "tool", "backpack", "loot"];
     let weight = actorData.items.reduce((weight, i) => {
       if ( !physicalItems.includes(i.type) ) return weight;
-      const q = i.data.data.quantity || 0;
+      const q = i.system.quantity || 0;
       let w = 0;
 	  if(game.settings.get("darksheet", "slotbasedinventory") && i.data.flags.darksheet != null)
 		w = i.data.flags.darksheet.item.slots || 0;
 	  else
-		w = i.data.data.weight || 0;
+		w = i.system.weight || 0;
 	
       return weight + (q * w);
     }, 0);

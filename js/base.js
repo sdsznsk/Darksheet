@@ -590,7 +590,7 @@ export default class ActorSheet5e extends ActorSheet {
   async _onSpellSlotOverride (event) {
     const span = event.currentTarget.parentElement;
     const level = span.dataset.level;
-    const override = this.actor.data.data.spells[level].override || span.dataset.slots;
+    const override = this.actor.system.spells[level].override || span.dataset.slots;
     const input = document.createElement("INPUT");
     input.type = "text";
     input.name = `data.spells.${level}.override`;
@@ -615,7 +615,7 @@ export default class ActorSheet5e extends ActorSheet {
       event.preventDefault();
       const itemId = event.currentTarget.closest(".item").dataset.itemId;
       const item = this.actor.getOwnedItem(itemId);
-      const uses = Math.clamped(0, parseInt(event.target.value), item.data.data.uses.max);
+      const uses = Math.clamped(0, parseInt(event.target.value), item.system.uses.max);
       event.target.value = uses;
       return item.update({ 'data.uses.value': uses });
   }

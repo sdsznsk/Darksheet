@@ -325,23 +325,23 @@
 						<script>
 						function addwound(){
 						let actor = game.actors.get(event.currentTarget.closest('.actor').id.replace('actor-',''));
-						let maxwounds = parseInt(actor.data.data.attributes.maxwounds.value);
+						let maxwounds = parseInt(actor.system.attributes.maxwounds.value);
 						maxwounds += 1;
 						let woundlisttext;
-						let woundlist = sheet.actor.data.data.attributes.woundlist;
+						let woundlist = sheet.actor.system.attributes.woundlist;
 						let actordata = sheet.actor;
-						for(let i = 0; i < sheet.actor.data.data.attributes.maxwounds.value; i++){
+						for(let i = 0; i < sheet.actor.system.attributes.maxwounds.value; i++){
 							woundlisttext = "wound"+i;//HIER GEHTS WEITER
 							woundlisttext = woundlist[woundlisttext];
 							if(woundlisttext === ""){
-							actordata.data.data.attributes.woundlist[woundlisttext] = "Put something here";
+							actordata.system.attributes.woundlist[woundlisttext] = "Put something here";
 							}
 						}
-						let update = actordata.data.data.attributes.woundlist;
+						let update = actordata.system.attributes.woundlist;
 						sheet.actor.update({'data.attributes.woundlist': update});
 						actor.update({'data.attributes.maxwounds.value': maxwounds});
 						console.log(actor);
-						console.log(actor.data.data.attributes.woundslist);
+						console.log(actor.system.attributes.woundslist);
 						}
 						</script>
 				</div>

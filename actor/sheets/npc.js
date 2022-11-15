@@ -146,7 +146,7 @@ export class ActorSheet5eNPC extends ActorSheet5e {
    */
   _onRollHealthFormula(event) {
     event.preventDefault();
-    const formula = this.actor.data.data.attributes.hp.formula;
+    const formula = this.actor.system.attributes.hp.formula;
     if ( !formula ) return;
     const hp = new Roll(formula).roll().total;
     AudioHelper.play({src: CONFIG.sounds.dice});

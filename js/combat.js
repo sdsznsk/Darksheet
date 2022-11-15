@@ -8,7 +8,7 @@
 export const _getInitiativeFormula = function(combatant) {
   const actor = combatant.actor;
   if ( !actor ) return "1d20";
-  const init = actor.data.data.attributes.init;
+  const init = actor.system.attributes.init;
 
   let nd = 1;
   let mods = "";
@@ -19,13 +19,13 @@ export const _getInitiativeFormula = function(combatant) {
     mods += "kh";
   }
 	if(game.settings.get('darksheet', 'intmod')){
-	init.mod = actor.data.data.atributes.int.mod
-	actor.update({'data.attributes.init.mod': actor.data.data.abilities.int.mod});
+	init.mod = actor.system.atributes.int.mod
+	actor.update({'data.attributes.init.mod': actor.system.abilities.int.mod});
 	}
   const parts = [`${nd}d20${mods}`, init.mod, (init.prof !== 0) ? init.prof : null, (init.bonus !== 0) ? init.bonus : null];
 
   // Optionally apply Dexterity tiebreaker
   const tiebreaker = game.settings.get("dnd5e", "initiativeDexTiebreaker");
-  if ( tiebreaker ) parts.push(actor.data.data.abilities.dex.value / 100);
+  if ( tiebreaker ) parts.push(actor.system.abilities.dex.value / 100);
   return parts.filter(p => p !== null).join(" + ");
 };

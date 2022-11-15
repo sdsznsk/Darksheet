@@ -47,7 +47,7 @@ export default class ActorSheet5eCharacter extends ActorSheet5e {
     sheetData.disableExperience = game.settings.get("dnd5e", "disableExperienceTracking");
     sheetData.classLabels = this.actor.itemTypes.class.map(c => c.name).join(", ");
     sheetData.multiclassLabels = this.actor.itemTypes.class.map(c => {
-      return [c.data.data.subclass, c.name, c.data.data.levels].filterJoin(" ");
+      return [c.system.subclass, c.name, c.system.levels].filterJoin(" ");
     }).join(", ");
 
     // Weight unit
@@ -108,7 +108,7 @@ export default class ActorSheet5eCharacter extends ActorSheet5e {
       this._prepareItemToggleState(item);
 
       // Primary Class
-      if ( item.type === "class" ) item.isOriginalClass = ( item._id === this.actor.data.data.details.originalClass );
+      if ( item.type === "class" ) item.isOriginalClass = ( item._id === this.actor.system.details.originalClass );
 
       // Classify items into types
       if ( item.type === "spell" ) arr[1].push(item);
@@ -126,7 +126,7 @@ export default class ActorSheet5eCharacter extends ActorSheet5e {
     // Organize Inventory or Item Slots
     let totalWeight = 0;
 	let pct = 0;
-	let maxpct = parseInt(data.data.attributes.inventoryslots) + parseInt(this.actor.data.data.abilities.str.mod);
+	let maxpct = parseInt(data.data.attributes.inventoryslots) + parseInt(this.actor.system.abilities.str.mod);
 	
 	if ( game.settings.get("darksheet", "slotbasedinventory") ) {
     for ( let i of items ) {
@@ -366,9 +366,9 @@ export default class ActorSheet5eCharacter extends ActorSheet5e {
     // Increment the number of class levels a character instead of creating a new item
     if ( itemData.type === "class" ) {
       const cls = this.actor.itemTypes.class.find(c => c.name === itemData.name);
-      let priorLevel = cls?.data.data.levels ?? 0;
+      let priorLevel = cls?.system.levels ?? 0;
       if ( cls ) {
-        const next = Math.min(priorLevel + 1, 20 + priorLevel - this.actor.data.data.details.level);
+        const next = Math.min(priorLevel + 1, 20 + priorLevel - this.actor.system.details.level);
         if ( next > priorLevel ) {
           itemData.levels = next;
 						 

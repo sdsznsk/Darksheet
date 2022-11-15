@@ -270,7 +270,7 @@ export class Actor5e extends Actor {
       }
       return obj;
     }, {});
-    data.prof = this.data.data.attributes.prof;
+    data.prof = this.system.attributes.prof;
     return data;
   }
 
@@ -363,8 +363,8 @@ export class Actor5e extends Actor {
     if ( item.data.type !== "spell" ) throw new Error("Wrong Item type");
 
     // Determine if the spell uses slots
-    let lvl = item.data.data.level;
-    const usesSlots = (lvl > 0) && CONFIG.DND5E.spellUpcastModes.includes(item.data.data.preparation.mode);
+    let lvl = item.system.level;
+    const usesSlots = (lvl > 0) && CONFIG.DND5E.spellUpcastModes.includes(item.system.preparation.mode);
     if ( !usesSlots ) return item.roll();
 
     // Configure the casting level and whether to consume a spell slot
@@ -375,7 +375,7 @@ export class Actor5e extends Actor {
     if ( configureDialog ) {
       const spellFormData = await SpellCastDialog.create(this, item);
       const isPact = spellFormData.get('level') === 'pact';
-      const lvl = isPact ? this.data.data.spells.pact.level : parseInt(spellFormData.get("level"));
+      const lvl = isPact ? this.system.spells.pact.level : parseInt(spellFormData.get("level"));
       if (Boolean(spellFormData.get("consume"))) {
         consume = isPact ? 'pact' : `spell${lvl}`;
       } else {
@@ -384,7 +384,7 @@ export class Actor5e extends Actor {
       placeTemplate = Boolean(spellFormData.get("placeTemplate"));
 
       // Create a temporary owned item to approximate the spell at a higher level
-      if ( lvl !== item.data.data.level ) {
+      if ( lvl !== item.system.level ) {
         item = item.constructor.createOwned(mergeObject(item.data, {"data.level": lvl}, {inplace: false}), this);
       }
     }
@@ -392,7 +392,7 @@ export class Actor5e extends Actor {
     // Update Actor data
     if ( consume && (lvl > 0) ) {
       await this.update({
-        [`data.spells.${consume}.value`]: Math.max(parseInt(this.data.data.spells[consume].value) - 1, 0)
+        [`data.spells.${consume}.value`]: Math.max(parseInt(this.system.spells[consume].value) - 1, 0)
       });
     }
 
@@ -417,12 +417,12 @@ export class Actor5e extends Actor {
    * @return {Promise.<Roll>}   A Promise which resolves to the created Roll instance
    */
   rollSkill(skillId, options={}) {
-    const skl = this.data.data.skills[skillId];
+    const skl = this.system.skills[skillId];
     const parts = ["@mod"];
     const data = {mod: skl.mod};
 
     // Include a global actor skill bonus
-    const actorBonus = getProperty(this.data.data.bonuses, "abilities.skill");
+    const actorBonus = getProperty(this.system.bonuses, "abilities.skill");
     if ( !!actorBonus ) {
       parts.push("@skillBonus");
       data.skillBonus = actorBonus;
@@ -477,7 +477,7 @@ export class Actor5e extends Actor {
    */
   rollAbilityTest(abilityId, options={}) {
     const label = CONFIG.DND5E.abilities[abilityId];
-    const abl = this.data.data.abilities[abilityId];
+    const abl = this.system.abilities[abilityId];
     const parts = ["@mod"];
     const data = {mod: abl.mod};
     const flags = this.data.flags || {};
@@ -485,15 +485,15 @@ export class Actor5e extends Actor {
     // Add feat-related proficiency bonuses
     if ( flags.dnd5e.remarkableAthlete && DND5E.characterFlags.remarkableAthlete.abilities.includes(abilityId) ) {
       parts.push("@proficiency");
-      data.proficiency = Math.ceil(0.5 * this.data.data.attributes.prof);
+      data.proficiency = Math.ceil(0.5 * this.system.attributes.prof);
     }
     else if ( flags.dnd5e.jackOfAllTrades ) {
       parts.push("@proficiency");
-      data.proficiency = Math.floor(0.5 * this.data.data.attributes.prof);
+      data.proficiency = Math.floor(0.5 * this.system.attributes.prof);
     }
 
     // Add global actor bonus
-    let actorBonus = getProperty(this.data.data.bonuses, "abilities.check");
+    let actorBonus = getProperty(this.system.bonuses, "abilities.check");
     if ( !!actorBonus ) {
       parts.push("@checkBonus");
       data.checkBonus = actorBonus;
@@ -522,7 +522,7 @@ export class Actor5e extends Actor {
    */
   rollAbilitySave(abilityId, options={}) {
     const label = CONFIG.DND5E.abilities[abilityId];
-    const abl = this.data.data.abilities[abilityId];
+    const abl = this.system.abilities[abilityId];
     const parts = ["@mod"];
     const data = {mod: abl.mod};
 
@@ -534,7 +534,7 @@ export class Actor5e extends Actor {
 
 
     // Include a global actor ability save bonus
-    const actorBonus = getProperty(this.data.data.bonuses, "abilities.save");
+    const actorBonus = getProperty(this.system.bonuses, "abilities.save");
     if ( !!actorBonus ) {
       parts.push("@saveBonus");
       data.saveBonus = actorBonus;
@@ -568,7 +568,7 @@ export class Actor5e extends Actor {
     const speaker = ChatMessage.getSpeaker({actor: this});
     const parts = [];
     const data = {};
-    const bonus = getProperty(this.data.data.bonuses, "abilities.save");
+    const bonus = getProperty(this.system.bonuses, "abilities.save");
     if ( bonus ) {
       parts.push("@saveBonus");
       data["saveBonus"] = bonus;
@@ -590,7 +590,7 @@ export class Actor5e extends Actor {
 
     // Take action depending on the result
     const success = roll.total >= 10;
-    const death = this.data.data.attributes.death;
+    const death = this.system.attributes.death;
 
     // Save success
     if ( success ) {
@@ -657,8 +657,8 @@ export class Actor5e extends Actor {
     if ( !roll ) return;
 
     // Adjust actor data
-    await cls.update({"data.hitDiceUsed": cls.data.data.hitDiceUsed + 1});
-    const hp = this.data.data.attributes.hp;
+    await cls.update({"data.hitDiceUsed": cls.system.hitDiceUsed + 1});
+    const hp = this.system.attributes.hp;
     const dhp = Math.min(hp.max - hp.value, roll.total);
     return this.update({"data.attributes.hp.value": hp.value + dhp});
   }
@@ -703,11 +703,11 @@ export class Actor5e extends Actor {
     await this.update(updateData);
 
     // Recover item uses
-    const items = this.items.filter(item => item.data.data.uses && (item.data.data.uses.per === "sr"));
+    const items = this.items.filter(item => item.system.uses && (item.system.uses.per === "sr"));
     const updateItems = items.map(item => {
       return {
         _id: item._id,
-        "data.uses.value": item.data.data.uses.max
+        "data.uses.value": item.system.uses.max
       };
     });
     await this.updateManyEmbeddedEntities("OwnedItem", updateItems);
@@ -783,8 +783,8 @@ export class Actor5e extends Actor {
 
     // Sort classes which can recover HD, assuming players prefer recovering larger HD first.
     const updateItems = this.items.filter(item => item.data.type === "class").sort((a, b) => {
-      let da = parseInt(a.data.data.hitDice.slice(1)) || 0;
-      let db = parseInt(b.data.data.hitDice.slice(1)) || 0;
+      let da = parseInt(a.system.hitDice.slice(1)) || 0;
+      let db = parseInt(b.system.hitDice.slice(1)) || 0;
       return db - da;
     }).reduce((updates, item) => {
       const d = item.data.data;
@@ -839,7 +839,7 @@ export class Actor5e extends Actor {
    * @return {Promise<Actor5e>}
    */
   convertCurrency() {
-    const curr = duplicate(this.data.data.currency);
+    const curr = duplicate(this.system.currency);
     const convert = {
       cp: {into: "sp", each: 10},
       sp: {into: "ep", each: 5 },
@@ -1047,7 +1047,7 @@ export class Actor5e extends Actor {
     const promises = [];
     for ( let t of canvas.tokens.controlled ) {
       let a = t.actor,
-          hp = a.data.data.attributes.hp,
+          hp = a.system.attributes.hp,
           tmp = parseInt(hp.temp) || 0,
           dt = value > 0 ? Math.min(tmp, value) : 0;
       promises.push(t.actor.update({

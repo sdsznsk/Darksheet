@@ -244,7 +244,7 @@ Hooks.on('updateActor', (actor, updates, options, userId) => {
     if (actor.data.type != "character") return;
     //UPDATE CUSTOM SHEET VALUE AND DISPLAY HIDDEN OPTIONS
     let customsheet;
-    if (actor.data.data.attributes.color === undefined) {} else if (actor.data.data.attributes.color.value === "custom") {
+    if (actor.system.attributes.color === undefined) {} else if (actor.system.attributes.color.value === "custom") {
         customsheet = true;
         actor.update({
             'data.attributes.color.custom': customsheet
@@ -255,17 +255,17 @@ Hooks.on('updateActor', (actor, updates, options, userId) => {
             'data.attributes.color.custom': customsheet
         });
     }
-    if (actor.data.data.attributes.automaticexhaust) {
+    if (actor.system.attributes.automaticexhaust) {
         let newexhaustion = 0;
-        let temp = actor.data.data.attributes.temp;
-        let food = actor.data.data.attributes.saturation.value;
-        let water = actor.data.data.attributes.thirst.value;
-        let fatigue = actor.data.data.attributes.fatigue.value;
-        let manualexhaustion = actor.data.data.attributes.exhaustion.value;
-        let closedwounds = actor.data.data.attributes.wounds.value;
+        let temp = actor.system.attributes.temp;
+        let food = actor.system.attributes.saturation.value;
+        let water = actor.system.attributes.thirst.value;
+        let fatigue = actor.system.attributes.fatigue.value;
+        let manualexhaustion = actor.system.attributes.exhaustion.value;
+        let closedwounds = actor.system.attributes.wounds.value;
         let maxwounds = 0;
-        if (actor.data.data.attributes.maxwounds != null) {
-            maxwounds = actor.data.data.attributes.maxwounds.value;
+        if (actor.system.attributes.maxwounds != null) {
+            maxwounds = actor.system.attributes.maxwounds.value;
         } else {}
         //console.log("ExhaustionTRACKINGGGGG");
         let woundexhaustion = maxwounds - closedwounds;
@@ -321,7 +321,7 @@ Hooks.on('updateActor', (actor, updates, options, userId) => {
         } else if (newexhaustion === 5) {
             exhaustion5 = true;
         }
-        if (actor.data.data.attributes.newexhaustion != newexhaustion) {
+        if (actor.system.attributes.newexhaustion != newexhaustion) {
             actor.update({
                 'data.attributes.newexhaustion': newexhaustion,
                 'data.status.isExhaustion1': exhaustion1,
@@ -330,7 +330,7 @@ Hooks.on('updateActor', (actor, updates, options, userId) => {
                 'data.status.isExhaustion4': exhaustion4,
                 'data.status.isExhaustion5': exhaustion5
             });
-            console.log("(DarkSheet): New Exhaustion: " + actor.data.data.attributes.newexhaustion);
+            console.log("(DarkSheet): New Exhaustion: " + actor.system.attributes.newexhaustion);
         }
     }
     //STATUS UPDATES
@@ -432,8 +432,8 @@ Hooks.on('updateActor', (actor, updates, options, userId) => {
     }
     //Intelligent Initiative
     if (game.settings.get('darksheet', 'intmod')) {
-        actor.data.data.attributes.init.mod = actor.data.data.abilities.int.mod;
-        actor.data.data.attributes.init.total = parseInt(actor.data.data.abilities.int.mod + actor.data.data.attributes.init.bonus + actor.data.data.attributes.init.prof);
+        actor.system.attributes.init.mod = actor.system.abilities.int.mod;
+        actor.system.attributes.init.total = parseInt(actor.system.abilities.int.mod + actor.system.attributes.init.bonus + actor.system.attributes.init.prof);
     }
 });
 
@@ -655,8 +655,8 @@ export class ItemSheet5e extends ItemSheet {
         // Ammunition
         if (consume.type === "ammo") {
             return actor.itemTypes.consumable.reduce((ammo, i) => {
-                if (i.data.data.consumableType === "ammo") {
-                    ammo[i.id] = `${i.name} (${i.data.data.quantity})`;
+                if (i.system.consumableType === "ammo") {
+                    ammo[i.id] = `${i.name} (${i.system.quantity})`;
                 }
                 return ammo;
             }, {
@@ -678,8 +678,8 @@ export class ItemSheet5e extends ItemSheet {
         // Materials
         else if (consume.type === "material") {
             return actor.items.reduce((obj, i) => {
-                if (["consumable", "loot"].includes(i.data.type) && !i.data.data.activation) {
-                    obj[i.id] = `${i.name} (${i.data.data.quantity})`;
+                if (["consumable", "loot"].includes(i.data.type) && !i.system.activation) {
+                    obj[i.id] = `${i.name} (${i.system.quantity})`;
                 }
                 return obj;
             }, {});
@@ -690,7 +690,7 @@ export class ItemSheet5e extends ItemSheet {
             return actor.items.reduce((obj, i) => {
 
                 // Limited-use items
-                const uses = i.data.data.uses || {};
+                const uses = i.system.uses || {};
                 if (uses.per && uses.max) {
                     const label = uses.per === "charges" ?
                         ` (${game.i18n.format("DND5E.AbilityUseChargesLabel", {value: uses.value})})` :
@@ -699,7 +699,7 @@ export class ItemSheet5e extends ItemSheet {
                 }
 
                 // Recharging items
-                const recharge = i.data.data.recharge || {};
+                const recharge = i.system.recharge || {};
                 if (recharge.value) obj[i.id] = `${i.name} (${game.i18n.format("DND5E.Recharge")})`;
                 return obj;
             }, {})
@@ -810,7 +810,7 @@ export class ItemSheet5e extends ItemSheet {
         // Add new damage component
         if (a.classList.contains("add-damage")) {
             await this._onSubmit(event); // Submit any unsaved changes
-            const damage = this.item.data.data.damage;
+            const damage = this.item.system.damage;
             return this.item.update({
                 "data.damage.parts": damage.parts.concat([
                     ["", ""]
@@ -820,7 +820,7 @@ export class ItemSheet5e extends ItemSheet {
         if (a.classList.contains("delete-damage")) {
             await this._onSubmit(event); // Submit any unsaved changes
             const li = a.closest(".damage-part");
-            const damage = duplicate(this.item.data.data.damage);
+            const damage = duplicate(this.item.system.damage);
             damage.parts.splice(Number(li.dataset.damagePart), 1);
             return this.item.update({
                 "data.damage.parts": damage.parts
@@ -872,7 +872,7 @@ export class DarkSheet extends ActorSheet5eCharacterDark {
 
 		html.find('.removewoundbutton').click(async event => {
 		   //update the actor
-		   let newwound = parseFloat(this.actor.data.data.attributes.maxwounds.value) - 1;
+		   let newwound = parseFloat(this.actor.system.attributes.maxwounds.value) - 1;
 		   let newtext = "";
 		   let button = event.currentTarget.id;
 		   let target = 'data.attributes.darksheet-wounds.'+ button;
@@ -902,11 +902,11 @@ export class DarkSheet extends ActorSheet5eCharacterDark {
 		})
 		html.find('.addwoundbutton').click(async event => {
             event.preventDefault();
-            if (this.actor.data.data.attributes.maxwounds.value >= 20) {
+            if (this.actor.system.attributes.maxwounds.value >= 20) {
                 ui.notifications.warn("Darksheet | You can not have more than 20 wounds.");
 
             } else {
-                let newwound = parseFloat(this.actor.data.data.attributes.maxwounds.value) + 1;
+                let newwound = parseFloat(this.actor.system.attributes.maxwounds.value) + 1;
                 this.actor.update({
                     'data.attributes.maxwounds.value': newwound
                 });
@@ -915,11 +915,11 @@ export class DarkSheet extends ActorSheet5eCharacterDark {
         html.find('.exhaustioncalc').click(async event => {
             event.preventDefault();
             let newexhaustion = 0;
-            let temp = this.actor.data.data.attributes.temp;
-            let food = this.actor.data.data.attributes.saturation.value;
-            let water = this.actor.data.data.attributes.thirst.value;
-            let fatigue = this.actor.data.data.attributes.fatigue.value;
-            let manualexhaustion = this.actor.data.data.attributes.exhaustion.value;
+            let temp = this.actor.system.attributes.temp;
+            let food = this.actor.system.attributes.saturation.value;
+            let water = this.actor.system.attributes.thirst.value;
+            let fatigue = this.actor.system.attributes.fatigue.value;
+            let manualexhaustion = this.actor.system.attributes.exhaustion.value;
             //Temperature Exhaustion
             if (temp === "exenegised") {
                 newexhaustion += -1;
@@ -1098,10 +1098,10 @@ export class DarkSheet extends ActorSheet5eCharacterDark {
             });
 
             if (darkitem.type === "equipment") { //ARMOR CALCULATION==========================================
-                let AC = darkitem.data.data.armor.value;
+                let AC = darkitem.system.armor.value;
                 let newBaseAC = 0;
-                if (darkitem.data.data.basearmor != null)
-                    newBaseAC = darkitem.data.data.basearmor.value;
+                if (darkitem.system.basearmor != null)
+                    newBaseAC = darkitem.system.basearmor.value;
                 if (newBaseAC == 0) {
                     newBaseAC = AC;
                 }
@@ -1148,7 +1148,7 @@ export class DarkSheet extends ActorSheet5eCharacterDark {
                 let updatedamage;
                 //DAMAGE CALCULATION PLUS++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
                 if (Number.isInteger(notches)) {
-                    let damage1 = darkitem.data.data.damage.parts[0][0];
+                    let damage1 = darkitem.system.damage.parts[0][0];
                     //			console.log(damage1);
                     let dicenumber = damage1.charAt(0); //2
                     let d = damage1.charAt(1); //d 
@@ -1156,8 +1156,8 @@ export class DarkSheet extends ActorSheet5eCharacterDark {
                     let mod = " + @mod";
 
                     let weapondamage;
-                    if (darkitem.data.data.damage.currentweapondamage) {
-                        weapondamage = darkitem.data.data.damage.currentweapondamage;
+                    if (darkitem.system.damage.currentweapondamage) {
+                        weapondamage = darkitem.system.damage.currentweapondamage;
                     } else {
                         weapondamage = dicenumber + d + damage; //"2d6 "
                     }
@@ -1165,7 +1165,7 @@ export class DarkSheet extends ActorSheet5eCharacterDark {
                     //			console.log("Darksheet-Dev:" +weapondamage);
                     if (weapondamage[weapondamage.length - 1] == " ")
                         weapondamage = weapondamage.substring(0, weapondamage.length - 1);
-                    let baseweapondamage = darkitem.data.data.damage.baseweapondamage;
+                    let baseweapondamage = darkitem.system.damage.baseweapondamage;
                     if (baseweapondamage === "") {
                         baseweapondamage = weapondamage;
                         darkitem.update({
@@ -1274,7 +1274,7 @@ export class DarkSheet extends ActorSheet5eCharacterDark {
                             // code block
                     }
                     updatedamage = weapondamage + mod;
-                    const parts = duplicate(darkitem.data.data.damage.parts);
+                    const parts = duplicate(darkitem.system.damage.parts);
                     parts[0][0] = updatedamage;
                     darkitem.update({
                         id: darkitem.data.id,
@@ -1304,7 +1304,7 @@ export class DarkSheet extends ActorSheet5eCharacterDark {
             event.preventDefault();
             const itemID = event.currentTarget.closest('.item').dataset.itemId;
             let darkitem = this.actor.items.get(itemID);
-            let basenotchdamage = darkitem.data.data.damage.basenotchdamage;
+            let basenotchdamage = darkitem.system.damage.basenotchdamage;
             let notches = darkitem.data.flags.darksheet.item.notches;
             let newnotches = notches - 1;
             let updatedamage;
@@ -1322,10 +1322,10 @@ export class DarkSheet extends ActorSheet5eCharacterDark {
                     'flags.darksheet.item.notches': newnotches
                 });
                 if (darkitem.type === "equipment") { //ARMOR CALCULATION==========================================
-                    let AC = darkitem.data.data.armor.value;
+                    let AC = darkitem.system.armor.value;
                     let BaseAC = 0;
-                    if (darkitem.data.data.basearmor != null)
-                        BaseAC = darkitem.data.data.basearmor.value;
+                    if (darkitem.system.basearmor != null)
+                        BaseAC = darkitem.system.basearmor.value;
                     if (BaseAC == 0) {
                         BaseAC = AC;
                     }
@@ -1352,23 +1352,23 @@ export class DarkSheet extends ActorSheet5eCharacterDark {
                 }
                 //DAMAGE CALCULATION MINUS-------------------------------------------------------------------
                 if (darkitem.type === "weapon") {
-                    let damage1 = darkitem.data.data.damage.parts[0][0];
+                    let damage1 = darkitem.system.damage.parts[0][0];
                     //			console.log(damage1);
                     let dicenumber = damage1.charAt(0); //2
                     let d = damage1.charAt(1); //d 
                     let damage = damage1.charAt(2) + damage1.charAt(3); //6
                     let mod = " + @mod";
                     let weapondamage;
-                    if (darkitem.data.data.damage.currentweapondamage) {
-                        weapondamage = darkitem.data.data.damage.currentweapondamage;
+                    if (darkitem.system.damage.currentweapondamage) {
+                        weapondamage = darkitem.system.damage.currentweapondamage;
                     } else {
                         weapondamage = dicenumber + d + damage; //"2d6 "
                     }
                     //			console.log("Darksheet-Dev:" + dicenumber, d, damage);
                     //			console.log("Darksheet-Dev:" +weapondamage);
 
-                    let baseweapondamage = darkitem.data.data.damage.baseweapondamage;
-                    if (darkitem.data.data.damage.baseweapondamage === undefined) {
+                    let baseweapondamage = darkitem.system.damage.baseweapondamage;
+                    if (darkitem.system.damage.baseweapondamage === undefined) {
                         baseweapondamage = weapondamage;
                         darkitem.update({
                             id: darkitem.data.id,
@@ -1441,12 +1441,12 @@ export class DarkSheet extends ActorSheet5eCharacterDark {
                                 weapondamage = "1d20";
                                 break;
                             default:
-                                if (darkitem.data.data.damage.baseweapondamage) weapondamage = darkitem.data.data.damage.baseweapondamage;
+                                if (darkitem.system.damage.baseweapondamage) weapondamage = darkitem.system.damage.baseweapondamage;
                                 break;
                         }
                     }
                     updatedamage = weapondamage + mod;
-                    const parts = duplicate(darkitem.data.data.damage.parts);
+                    const parts = duplicate(darkitem.system.damage.parts);
                     parts[0][0] = updatedamage;
                     if (newnotches <= 0) {
                         basenotchdamage = "";
@@ -1558,17 +1558,17 @@ export class DarkSheet extends ActorSheet5eCharacterDark {
                     }
                 });
                 //FIGURE OUT WHICH AFFLICTION TO Set
-                if (!this.actor.data.data.attributes.break1) {
+                if (!this.actor.system.attributes.break1) {
                     this.actor.update({
                         'data.attributes.break1': true,
                         'data.attributes.affliction1.value': AfflictionName
                     });
-                } else if (!this.actor.data.data.attributes.break2) {
+                } else if (!this.actor.system.attributes.break2) {
                     this.actor.update({
                         'data.attributes.break2': true,
                         'data.attributes.affliction2.value': AfflictionName
                     });
-                } else if (this.actor.data.data.attributes.break3) {
+                } else if (this.actor.system.attributes.break3) {
                     this.actor.update({
                         'data.attributes.break2': true,
                         'data.attributes.affliction2.value': AfflictionName
@@ -1587,10 +1587,10 @@ export class DarkSheet extends ActorSheet5eCharacterDark {
             const itemID = event.currentTarget.closest('.item').dataset.itemId;
             let darkitem = this.actor.items.get(itemID);
             //console.log(darkitem);
-            let used = darkitem.data.data.hitDiceUsed + 1;
+            let used = darkitem.system.hitDiceUsed + 1;
             //INVALID VALUE CHECK
-            if (used > darkitem.data.data.levels) {
-                used = darkitem.data.data.levels;
+            if (used > darkitem.system.levels) {
+                used = darkitem.system.levels;
             } else if (used < 0) {
                 used = 0;
             }
@@ -1605,11 +1605,11 @@ export class DarkSheet extends ActorSheet5eCharacterDark {
             const itemID = event.currentTarget.closest('.item').dataset.itemId;
             let darkitem = this.actor.items.get(itemID);
             console.log(darkitem);
-            let used = darkitem.data.data.hitDiceUsed - 1;
+            let used = darkitem.system.hitDiceUsed - 1;
 
             //INVALID VALUE CHECK
-            if (used > darkitem.data.data.levels) {
-                used = darkitem.data.data.levels;
+            if (used > darkitem.system.levels) {
+                used = darkitem.system.levels;
             } else if (used < 0) {
                 used = 0;
             }
@@ -1622,7 +1622,7 @@ export class DarkSheet extends ActorSheet5eCharacterDark {
 
         html.find('.minusspellslot-spell1').click(async event => {
             event.preventDefault();
-            let actor = this.actor.data.data.spells.spell1.value;
+            let actor = this.actor.system.spells.spell1.value;
             if (actor >= 1) {
                 actor -= 1;
                 this.actor.update({
@@ -1632,7 +1632,7 @@ export class DarkSheet extends ActorSheet5eCharacterDark {
         });
         html.find('.minusspellslot-spell2').click(async event => {
             event.preventDefault();
-            let actor = this.actor.data.data.spells.spell2.value;
+            let actor = this.actor.system.spells.spell2.value;
             if (actor >= 1) {
                 actor -= 1;
                 this.actor.update({
@@ -1642,7 +1642,7 @@ export class DarkSheet extends ActorSheet5eCharacterDark {
         });
         html.find('.minusspellslot-spell3').click(async event => {
             event.preventDefault();
-            let actor = this.actor.data.data.spells.spell3.value;
+            let actor = this.actor.system.spells.spell3.value;
             if (actor >= 1) {
                 actor -= 1;
                 this.actor.update({
@@ -1652,7 +1652,7 @@ export class DarkSheet extends ActorSheet5eCharacterDark {
         });
         html.find('.minusspellslot-spell4').click(async event => {
             event.preventDefault();
-            let actor = this.actor.data.data.spells.spell4.value;
+            let actor = this.actor.system.spells.spell4.value;
             if (actor >= 1) {
                 actor -= 1;
                 this.actor.update({
@@ -1662,7 +1662,7 @@ export class DarkSheet extends ActorSheet5eCharacterDark {
         });
         html.find('.minusspellslot-spell5').click(async event => {
             event.preventDefault();
-            let actor = this.actor.data.data.spells.spell5.value;
+            let actor = this.actor.system.spells.spell5.value;
             if (actor >= 1) {
                 actor -= 1;
                 this.actor.update({
@@ -1672,7 +1672,7 @@ export class DarkSheet extends ActorSheet5eCharacterDark {
         });
         html.find('.minusspellslot-spell6').click(async event => {
             event.preventDefault();
-            let actor = this.actor.data.data.spells.spell2.value;
+            let actor = this.actor.system.spells.spell2.value;
             if (actor >= 1) {
                 actor -= 1;
                 this.actor.update({
@@ -1682,7 +1682,7 @@ export class DarkSheet extends ActorSheet5eCharacterDark {
         });
         html.find('.minusspellslot-spell7').click(async event => {
             event.preventDefault();
-            let actor = this.actor.data.data.spells.spell7.value;
+            let actor = this.actor.system.spells.spell7.value;
             if (actor >= 1) {
                 actor -= 1;
                 this.actor.update({
@@ -1692,7 +1692,7 @@ export class DarkSheet extends ActorSheet5eCharacterDark {
         });
         html.find('.minusspellslot-spell8').click(async event => {
             event.preventDefault();
-            let actor = this.actor.data.data.spells.spell8.value;
+            let actor = this.actor.system.spells.spell8.value;
             if (actor >= 1) {
                 actor -= 1;
                 this.actor.update({
@@ -1702,7 +1702,7 @@ export class DarkSheet extends ActorSheet5eCharacterDark {
         });
         html.find('.minusspellslot-spell9').click(async event => {
             event.preventDefault();
-            let actor = this.actor.data.data.spells.spell9.value;
+            let actor = this.actor.system.spells.spell9.value;
             if (actor >= 1) {
                 actor -= 1;
                 this.actor.update({
@@ -1712,7 +1712,7 @@ export class DarkSheet extends ActorSheet5eCharacterDark {
         });
         html.find('.minusspellslot-pact').click(async event => {
             event.preventDefault();
-            let spellamount = this.actor.data.data.spells.pact.value;
+            let spellamount = this.actor.system.spells.pact.value;
             if (spellamount > 0) {
                 spellamount -= 1;
                 this.actor.update({
@@ -1723,8 +1723,8 @@ export class DarkSheet extends ActorSheet5eCharacterDark {
         //============================================================================================PLUS
         html.find('.plusspellslot-spell1').click(async event => {
             event.preventDefault();
-            let maxamount = this.actor.data.data.spells.spell1.max;;
-            let spellamount = this.actor.data.data.spells.spell1.value;
+            let maxamount = this.actor.system.spells.spell1.max;;
+            let spellamount = this.actor.system.spells.spell1.value;
             if (spellamount < maxamount) {
                 spellamount += 1;
                 this.actor.update({
@@ -1734,8 +1734,8 @@ export class DarkSheet extends ActorSheet5eCharacterDark {
         });
         html.find('.plusspellslot-spell2').click(async event => {
             event.preventDefault();
-            let maxamount = this.actor.data.data.spells.spell2.max;;
-            let spellamount = this.actor.data.data.spells.spell2.value;
+            let maxamount = this.actor.system.spells.spell2.max;;
+            let spellamount = this.actor.system.spells.spell2.value;
             if (spellamount < maxamount) {
                 spellamount += 1;
                 this.actor.update({
@@ -1745,8 +1745,8 @@ export class DarkSheet extends ActorSheet5eCharacterDark {
         });
         html.find('.plusspellslot-spell3').click(async event => {
             event.preventDefault();
-            let maxamount = this.actor.data.data.spells.spell3.max;;
-            let spellamount = this.actor.data.data.spells.spell3.value;
+            let maxamount = this.actor.system.spells.spell3.max;;
+            let spellamount = this.actor.system.spells.spell3.value;
             if (spellamount < maxamount) {
                 spellamount += 1;
                 this.actor.update({
@@ -1756,8 +1756,8 @@ export class DarkSheet extends ActorSheet5eCharacterDark {
         });
         html.find('.plusspellslot-spell4').click(async event => {
             event.preventDefault();
-            let maxamount = this.actor.data.data.spells.spell4.max;;
-            let spellamount = this.actor.data.data.spells.spell4.value;
+            let maxamount = this.actor.system.spells.spell4.max;;
+            let spellamount = this.actor.system.spells.spell4.value;
             if (spellamount < maxamount) {
                 spellamount += 1;
                 this.actor.update({
@@ -1767,8 +1767,8 @@ export class DarkSheet extends ActorSheet5eCharacterDark {
         });
         html.find('.plusspellslot-spell5').click(async event => {
             event.preventDefault();
-            let maxamount = this.actor.data.data.spells.spell5.max;;
-            let spellamount = this.actor.data.data.spells.spell5.value;
+            let maxamount = this.actor.system.spells.spell5.max;;
+            let spellamount = this.actor.system.spells.spell5.value;
             if (spellamount < maxamount) {
                 spellamount += 1;
                 this.actor.update({
@@ -1778,8 +1778,8 @@ export class DarkSheet extends ActorSheet5eCharacterDark {
         });
         html.find('.plusspellslot-spell6').click(async event => {
             event.preventDefault();
-            let maxamount = this.actor.data.data.spells.spell6.max;;
-            let spellamount = this.actor.data.data.spells.spell6.value;
+            let maxamount = this.actor.system.spells.spell6.max;;
+            let spellamount = this.actor.system.spells.spell6.value;
             if (spellamount < maxamount) {
                 spellamount += 1;
                 this.actor.update({
@@ -1789,8 +1789,8 @@ export class DarkSheet extends ActorSheet5eCharacterDark {
         });
         html.find('.plusspellslot-spell7').click(async event => {
             event.preventDefault();
-            let maxamount = this.actor.data.data.spells.spell7.max;;
-            let spellamount = this.actor.data.data.spells.spell7.value;
+            let maxamount = this.actor.system.spells.spell7.max;;
+            let spellamount = this.actor.system.spells.spell7.value;
             if (spellamount < maxamount) {
                 spellamount += 1;
                 this.actor.update({
@@ -1800,8 +1800,8 @@ export class DarkSheet extends ActorSheet5eCharacterDark {
         });
         html.find('.plusspellslot-spell8').click(async event => {
             event.preventDefault();
-            let maxamount = this.actor.data.data.spells.spell8.max;;
-            let spellamount = this.actor.data.data.spells.spell8.value;
+            let maxamount = this.actor.system.spells.spell8.max;;
+            let spellamount = this.actor.system.spells.spell8.value;
             if (spellamount < maxamount) {
                 spellamount += 1;
                 this.actor.update({
@@ -1811,8 +1811,8 @@ export class DarkSheet extends ActorSheet5eCharacterDark {
         });
         html.find('.plusspellslot-spell9').click(async event => {
             event.preventDefault();
-            let maxamount = this.actor.data.data.spells.spell9.max;;
-            let spellamount = this.actor.data.data.spells.spell9.value;
+            let maxamount = this.actor.system.spells.spell9.max;;
+            let spellamount = this.actor.system.spells.spell9.value;
             if (spellamount < maxamount) {
                 spellamount += 1;
                 this.actor.update({
@@ -1822,8 +1822,8 @@ export class DarkSheet extends ActorSheet5eCharacterDark {
         });
         html.find('.plusspellslot-pact').click(async event => {
             event.preventDefault();
-            let pactamount = this.actor.data.data.spells.pact.max;
-            let spellamount = this.actor.data.data.spells.pact.value;
+            let pactamount = this.actor.system.spells.pact.max;
+            let spellamount = this.actor.system.spells.pact.value;
             if (spellamount < pactamount) {
                 spellamount += 1;
                 this.actor.update({
@@ -1839,15 +1839,15 @@ export class DarkSheet extends ActorSheet5eCharacterDark {
         html.find('.exhaustioncalc').click(async event => {
             event.preventDefault();
             let newexhaustion = 0;
-            let temp = this.actor.data.data.attributes.temp;
-            let food = this.actor.data.data.attributes.saturation.value;
-            let water = this.actor.data.data.attributes.thirst.value;
-            let fatigue = this.actor.data.data.attributes.fatigue.value;
-            let manualexhaustion = this.actor.data.data.attributes.exhaustion.value;
-            let closedwounds = this.actor.data.data.attributes.wounds.value;
+            let temp = this.actor.system.attributes.temp;
+            let food = this.actor.system.attributes.saturation.value;
+            let water = this.actor.system.attributes.thirst.value;
+            let fatigue = this.actor.system.attributes.fatigue.value;
+            let manualexhaustion = this.actor.system.attributes.exhaustion.value;
+            let closedwounds = this.actor.system.attributes.wounds.value;
             let maxwounds = 0;
-            if (this.actor.data.data.attributes.maxwounds != null) {
-                maxwounds = this.actor.data.data.attributes.maxwounds.value;
+            if (this.actor.system.attributes.maxwounds != null) {
+                maxwounds = this.actor.system.attributes.maxwounds.value;
             }
             let woundexhaustion = maxwounds - closedwounds;
             //Temperature Exhaustion
@@ -1887,8 +1887,8 @@ export class DarkSheet extends ActorSheet5eCharacterDark {
             }
             //addding wound exhaustion
             newexhaustion += woundexhaustion;
-            this.actor.data.data.attributes.newexhaustion = newexhaustion;
-            console.log("(DarkSheet): New Exhaustion: " + this.actor.data.data.attributes.newexhaustion);
+            this.actor.system.attributes.newexhaustion = newexhaustion;
+            console.log("(DarkSheet): New Exhaustion: " + this.actor.system.attributes.newexhaustion);
             this.render();
         });
         html.find('.staminacheck').click(async event => {
@@ -1942,22 +1942,22 @@ export class DarkSheet extends ActorSheet5eCharacterDark {
                     }
                 });
                 let food;
-                if (this.actor.data.data.attributes.saturation.value === "foodstuffed") {
+                if (this.actor.system.attributes.saturation.value === "foodstuffed") {
                     console.log("(DarkSheet): Your stuffed character is now well-fed");
                     food = "foodwellfed";
-                } else if (this.actor.data.data.attributes.saturation.value === "foodwellfed") {
+                } else if (this.actor.system.attributes.saturation.value === "foodwellfed") {
                     console.log("(DarkSheet): Your well-fed character is now ok");
                     food = "foodok";
-                } else if (this.actor.data.data.attributes.saturation.value === "foodok") {
+                } else if (this.actor.system.attributes.saturation.value === "foodok") {
                     console.log("(DarkSheet): Your ok character is now pekish");
                     food = "foodpekish";
-                } else if (this.actor.data.data.attributes.saturation.value === "foodpekish") {
+                } else if (this.actor.system.attributes.saturation.value === "foodpekish") {
                     console.log("(DarkSheet): Your pekish character is now hungry");
                     food = "foodhungry";
-                } else if (this.actor.data.data.attributes.saturation.value === "foodhungry") {
+                } else if (this.actor.system.attributes.saturation.value === "foodhungry") {
                     console.log("(DarkSheet): Your hungry character is now ravenous");
                     food = "foodravenous";
-                } else if (this.actor.data.data.attributes.saturation.value === "foodravenous") {
+                } else if (this.actor.system.attributes.saturation.value === "foodravenous") {
                     console.log("(DarkSheet): Your foodravenous character is now foodstarving");
                     food = "foodstarving";
                 } else {
@@ -1985,22 +1985,22 @@ export class DarkSheet extends ActorSheet5eCharacterDark {
                     }
                 });
                 let water;
-                if (this.actor.data.data.attributes.thirst.value === "wquenched") {
+                if (this.actor.system.attributes.thirst.value === "wquenched") {
                     console.log("(DarkSheet): Your quenched character is now refreshed");
                     water = "wrefreshed";
-                } else if (this.actor.data.data.attributes.thirst.value === "wrefreshed") {
+                } else if (this.actor.system.attributes.thirst.value === "wrefreshed") {
                     console.log("(DarkSheet): Your refreshed character is now ok");
                     water = "wok";
-                } else if (this.actor.data.data.attributes.thirst.value === "wok") {
+                } else if (this.actor.system.attributes.thirst.value === "wok") {
                     console.log("(DarkSheet): Your ok character is now parched");
                     water = "wparched";
-                } else if (this.actor.data.data.attributes.thirst.value === "wparched") {
+                } else if (this.actor.system.attributes.thirst.value === "wparched") {
                     console.log("(DarkSheet): Your parched character is now thirsty");
                     water = "wthirsty";
-                } else if (this.actor.data.data.attributes.thirst.value === "wthirsty") {
+                } else if (this.actor.system.attributes.thirst.value === "wthirsty") {
                     console.log("(DarkSheet): Your thirsty character is now dry");
                     water = "wdry";
-                } else if (this.actor.data.data.attributes.thirst.value === "wdry") {
+                } else if (this.actor.system.attributes.thirst.value === "wdry") {
                     console.log("(DarkSheet): Your dry character is now dehydrated");
                     water = "wdehydrated";
                 } else {
@@ -2028,22 +2028,22 @@ export class DarkSheet extends ActorSheet5eCharacterDark {
                     }
                 });
                 let fatigue;
-                if (this.actor.data.data.attributes.fatigue.value === "exenegised") {
+                if (this.actor.system.attributes.fatigue.value === "exenegised") {
                     console.log("(DarkSheet): Your energised character is now well-rested");
                     fatigue = "exwell";
-                } else if (this.actor.data.data.attributes.fatigue.value === "exwell") {
+                } else if (this.actor.system.attributes.fatigue.value === "exwell") {
                     console.log("(DarkSheet): Your well-rested character is now ok");
                     fatigue = "exok";
-                } else if (this.actor.data.data.attributes.fatigue.value === "exok") {
+                } else if (this.actor.system.attributes.fatigue.value === "exok") {
                     console.log("(DarkSheet): Your ok character is now tired");
                     fatigue = "extired";
-                } else if (this.actor.data.data.attributes.fatigue.value === "extired") {
+                } else if (this.actor.system.attributes.fatigue.value === "extired") {
                     console.log("(DarkSheet): Your tired character is now sleepy");
                     fatigue = "exsleepy";
-                } else if (this.actor.data.data.attributes.fatigue.value === "exsleepy") {
+                } else if (this.actor.system.attributes.fatigue.value === "exsleepy") {
                     console.log("(DarkSheet): Your sleepy character is now very sleepy");
                     fatigue = "exvsleepy";
-                } else if (this.actor.data.data.attributes.fatigue.value === "exvsleepy") {
+                } else if (this.actor.system.attributes.fatigue.value === "exvsleepy") {
                     console.log("(DarkSheet): Your very sleepy character is now barely awake");
                     fatigue = "exbarely";
                 } else {
@@ -2055,11 +2055,11 @@ export class DarkSheet extends ActorSheet5eCharacterDark {
                 this.render();
             }
             let newexhaustion = 0;
-            let temp = this.actor.data.data.attributes.temp;
-            let food = this.actor.data.data.attributes.saturation.value;
-            let water = this.actor.data.data.attributes.thirst.value;
-            let fatigue = this.actor.data.data.attributes.fatigue.value;
-            let manualexhaustion = this.actor.data.data.attributes.exhaustion.value;
+            let temp = this.actor.system.attributes.temp;
+            let food = this.actor.system.attributes.saturation.value;
+            let water = this.actor.system.attributes.thirst.value;
+            let fatigue = this.actor.system.attributes.fatigue.value;
+            let manualexhaustion = this.actor.system.attributes.exhaustion.value;
             //Temperature Exhaustion
             if (temp === "exenegised") {
                 newexhaustion += -1;
@@ -2095,7 +2095,7 @@ export class DarkSheet extends ActorSheet5eCharacterDark {
             if (newexhaustion <= 0) {
                 newexhaustion = 0;
             }
-            console.log("(DarkSheet): New Exhaustion: " + this.actor.data.data.attributes.newexhaustion);
+            console.log("(DarkSheet): New Exhaustion: " + this.actor.system.attributes.newexhaustion);
             this.actor.update({
                 'data.attributes.newexhaustion': newexhaustion
             });
@@ -2105,11 +2105,11 @@ export class DarkSheet extends ActorSheet5eCharacterDark {
         html.find('.exhaustionstatus').click(async event => {
             event.preventDefault();
             let newexhaustion = 0;
-            let temp = this.actor.data.data.attributes.temp;
-            let food = this.actor.data.data.attributes.saturation.value;
-            let water = this.actor.data.data.attributes.thirst.value;
-            let fatigue = this.actor.data.data.attributes.fatigue.value;
-            let manualexhaustion = this.actor.data.data.attributes.exhaustion.value;
+            let temp = this.actor.system.attributes.temp;
+            let food = this.actor.system.attributes.saturation.value;
+            let water = this.actor.system.attributes.thirst.value;
+            let fatigue = this.actor.system.attributes.fatigue.value;
+            let manualexhaustion = this.actor.system.attributes.exhaustion.value;
             //Temperature Exhaustion
             if (temp === "exenegised") {
                 newexhaustion += -1;
@@ -2146,14 +2146,14 @@ export class DarkSheet extends ActorSheet5eCharacterDark {
                 newexhaustion = 0;
             }
             //adding wound exhaustion
-            let closedwounds = this.actor.data.data.attributes.wounds.value;
+            let closedwounds = this.actor.system.attributes.wounds.value;
             let maxwounds = 0;
-            if (this.actor.data.data.attributes.maxwounds != null) {
-                maxwounds = this.actor.data.data.attributes.maxwounds.value;
+            if (this.actor.system.attributes.maxwounds != null) {
+                maxwounds = this.actor.system.attributes.maxwounds.value;
             }
             let woundexhaustion = maxwounds - closedwounds;
             newexhaustion += woundexhaustion;
-            console.log("(DarkSheet): New Exhaustion: " + this.actor.data.data.attributes.newexhaustion);
+            console.log("(DarkSheet): New Exhaustion: " + this.actor.system.attributes.newexhaustion);
 
             let exhaustion1 = false;
             let exhaustion2 = false;
@@ -2190,7 +2190,7 @@ export class DarkSheet extends ActorSheet5eCharacterDark {
             this.actor.update({
                 'data.attributes.newexhaustion': newexhaustion
             });
-            let exhaustion = this.actor.data.data.attributes.newexhaustion;
+            let exhaustion = this.actor.system.attributes.newexhaustion;
             let content = `
 				<div class="dnd5e chat-card item-card" data-acor-id="${this.actor.id}">
 					<header class="card-header flexrow">
@@ -2372,13 +2372,13 @@ export class DarkSheet extends ActorSheet5eCharacterDark {
             let result = ["You fail two death saving throws.", "You fail one death saving throw.", "No change.", "You regain 1 hit point."]
             let finalresult = 0;
             let deathsavevalue = 0;
-            if (this.actor.data.data.attributes.deathsave1.value) {
+            if (this.actor.system.attributes.deathsave1.value) {
                 deathsavevalue++;
             }
-            if (this.actor.data.data.attributes.deathsave2.value) {
+            if (this.actor.system.attributes.deathsave2.value) {
                 deathsavevalue++;
             }
-            if (this.actor.data.data.attributes.deathsave3.value) {
+            if (this.actor.system.attributes.deathsave3.value) {
                 deathsavevalue++;
             }
 
@@ -2511,7 +2511,7 @@ export class DarkSheet extends ActorSheet5eCharacterDark {
             let rollMode = game.settings.get("core", "rollMode");
             if (["gmroll", "blindroll"].includes(rollMode)) rollWhisper = ChatMessage.getWhisperRecipients("GM")
             if (rollMode === "blindroll") rollBlind = true;
-            if (this.actor.data.data.attributes.inspirations.value <= 0) {
+            if (this.actor.system.attributes.inspirations.value <= 0) {
                 ChatMessage.create({
                     user: game.user.id,
                     content: `<div class="dnd5e chat-card item-card" data-acor-id="${this.actor.id}">
@@ -2558,7 +2558,7 @@ export class DarkSheet extends ActorSheet5eCharacterDark {
                         }
                     }
                 });
-                let val = this.actor.data.data.attributes.inspirations.value - 1;
+                let val = this.actor.system.attributes.inspirations.value - 1;
                 this.actor.update({
                     'data.attributes.inspirations.value': val
                 });
@@ -2574,7 +2574,7 @@ export class DarkSheet extends ActorSheet5eCharacterDark {
             let rollMode = game.settings.get("core", "rollMode");
             if (["gmroll", "blindroll"].includes(rollMode)) rollWhisper = ChatMessage.getWhisperRecipients("GM")
             if (rollMode === "blindroll") rollBlind = true;
-            if (this.actor.data.data.attributes.heropoints.value <= 0) {
+            if (this.actor.system.attributes.heropoints.value <= 0) {
                 ChatMessage.create({
                     user: game.user.id,
                     content: `<div class="dnd5e chat-card item-card" data-acor-id="${this.actor.id}">
@@ -2634,7 +2634,7 @@ export class DarkSheet extends ActorSheet5eCharacterDark {
                         }
                     }
                 });
-                let val = this.actor.data.data.attributes.heropoints.value - 1;
+                let val = this.actor.system.attributes.heropoints.value - 1;
                 this.actor.update({
                     'data.attributes.heropoints.value': val
                 });
@@ -2646,7 +2646,7 @@ export class DarkSheet extends ActorSheet5eCharacterDark {
         html.find('.woundroll').click(async event => {
             event.preventDefault();
             let table = game.tables.find(t => t.data.name === "Reopening Wounds");
-            let wounds = this.actor.data.data.attributes.wounds.value;
+            let wounds = this.actor.system.attributes.wounds.value;
             if (wounds == 0) {
                 ui.notifications.warn("You don't have any closed wounds that could reopen.");
                 return;
@@ -2957,11 +2957,11 @@ export class DarkSheet extends ActorSheet5eCharacterDark {
                 }
             };
             let newexhaustion = 0;
-            let temp = this.actor.data.data.attributes.temp;
-            let food = this.actor.data.data.attributes.saturation.value;
-            let water = this.actor.data.data.attributes.thirst.value;
-            let fatigue = this.actor.data.data.attributes.fatigue.value;
-            let manualexhaustion = this.actor.data.data.attributes.exhaustion.value;
+            let temp = this.actor.system.attributes.temp;
+            let food = this.actor.system.attributes.saturation.value;
+            let water = this.actor.system.attributes.thirst.value;
+            let fatigue = this.actor.system.attributes.fatigue.value;
+            let manualexhaustion = this.actor.system.attributes.exhaustion.value;
             //Temperature Exhaustion
             if (temp === "exenegised") {
                 newexhaustion += -1;
@@ -2997,9 +2997,9 @@ export class DarkSheet extends ActorSheet5eCharacterDark {
             if (newexhaustion <= 0) {
                 newexhaustion = 0;
             }
-            this.actor.data.data.attributes.newexhaustion = newexhaustion;
-            console.log("(DarkSheet): New Exhaustion: " + this.actor.data.data.attributes.newexhaustion);
-            if (this.actor.data.data.attributes.newexhaustion != newexhaustion) {
+            this.actor.system.attributes.newexhaustion = newexhaustion;
+            console.log("(DarkSheet): New Exhaustion: " + this.actor.system.attributes.newexhaustion);
+            if (this.actor.system.attributes.newexhaustion != newexhaustion) {
                 this.actor.update({
                     'data.attributes.newexhaustion': newexhaustion
                 });
@@ -3049,12 +3049,12 @@ export class DarkSheet extends ActorSheet5eCharacterDark {
 
         html.find('.healwound').click(async event => {
             event.preventDefault();
-            let conmod = this.actor.data.data.abilities.con.mod;
+            let conmod = this.actor.system.abilities.con.mod;
             let healtotal = 0;
-            let wounds = this.actor.data.data.attributes.wounds.value;
+            let wounds = this.actor.system.attributes.wounds.value;
             let maxwounds = 0;
-            if (this.actor.data.data.attributes.maxwounds != null) {
-                maxwounds = this.actor.data.data.attributes.maxwounds.value;
+            if (this.actor.system.attributes.maxwounds != null) {
+                maxwounds = this.actor.system.attributes.maxwounds.value;
             }
             let i = 0;
             for (i = maxwounds; i > 0; i = i - 1) {
@@ -3064,7 +3064,7 @@ export class DarkSheet extends ActorSheet5eCharacterDark {
                     healtotal++;
                 }
             }
-            let newwound = this.actor.data.data.attributes.maxwounds.value - healtotal;
+            let newwound = this.actor.system.attributes.maxwounds.value - healtotal;
             this.actor.update({
                 'data.attributes.maxwounds.value': newwound
             });
@@ -3201,10 +3201,10 @@ export class DarkSheet extends ActorSheet5eCharacterDark {
 
         html.find('.hitdiceroll').click(async event => {
             event.preventDefault();
-            let hd = this.actor.data.data.attributes.hitdice.value;
-            let conmod = this.actor.data.data.abilities.con.mod;
+            let hd = this.actor.system.attributes.hitdice.value;
+            let conmod = this.actor.system.abilities.con.mod;
             let roll1 = await new Roll(`${hd}`).roll().total + conmod;
-            let hp = this.actor.data.data.attributes.hp.value;
+            let hp = this.actor.system.attributes.hp.value;
             // Send content to chat
             let rollWhisper = null;
             let rollBlind = false;
@@ -3236,18 +3236,18 @@ export class DarkSheet extends ActorSheet5eCharacterDark {
                     }
                 }
             });
-            const newhp = this.actor.data.data.attributes.hp.value + roll1;
-            if (newhp >= this.actor.data.data.attributes.hp.max) {
-                this.actor.data.data.attributes.hp.value = his.actor.data.data.attributes.hp.max
+            const newhp = this.actor.system.attributes.hp.value + roll1;
+            if (newhp >= this.actor.system.attributes.hp.max) {
+                this.actor.system.attributes.hp.value = his.actor.system.attributes.hp.max
             } else {
-                this.actor.data.data.attributes.hp.value = newhp
+                this.actor.system.attributes.hp.value = newhp
             }
         });
 
         /*LOOK FOR DEFENSEROLL*/
         html.find('.handy-ac').click(async event => {
             event.preventDefault();
-            let ac = this.actor.data.data.attributes.ac.value;
+            let ac = this.actor.system.attributes.ac.value;
             let roll1 = await new Roll(`d20`).roll();
             let roll2 = await new Roll(`d20`).roll();
             let rollResult = roll1._total + ac;
@@ -3256,7 +3256,7 @@ export class DarkSheet extends ActorSheet5eCharacterDark {
                 rollResult -= 10;
                 rollResult2 -= 10;
             }
-            let wounds = this.actor.data.data.attributes.wounds.value;
+            let wounds = this.actor.system.attributes.wounds.value;
             let actorID = this.actor.data.id;
             let content = `
                 <div class="dnd5e chat-card item-card" data-acor-id="${this.actor.id}">
@@ -3448,7 +3448,7 @@ export class DarkSheet extends ActorSheet5eCharacterDark {
         /*LOOK FOR SPELLATTACK*/
         html.find('.spell-dc').click(async event => {
             event.preventDefault();
-            let dc = this.actor.data.data.attributes.spelldc;
+            let dc = this.actor.system.attributes.spelldc;
             let roll1 = await new Roll(`d20`).roll();
             let roll2 = await new Roll(`d20`).roll();
             let rollResult = parseInt(roll1._total) + dc;
@@ -3614,10 +3614,10 @@ Hooks.on(`ready`, () => {
 			
 			//RENDER WOUNDS ON DARKSHEET
 			let maxwounds = 0;
-			if(sheet.actor.data.data.attributes.maxwounds != null){
-				maxwounds = sheet.actor.data.data.attributes.maxwounds.value;
+			if(sheet.actor.system.attributes.maxwounds != null){
+				maxwounds = sheet.actor.system.attributes.maxwounds.value;
 			}
-			if(sheet.actor.data.data.attributes.inventoryslots == null){
+			if(sheet.actor.system.attributes.inventoryslots == null){
 				sheet.actor.update({
 						'data.attributes.inventoryslots': "18",
 				});
@@ -3645,22 +3645,22 @@ Hooks.on(`ready`, () => {
 					}
 				}
 			}
-			if(sheet.actor.data.data.attributes.maxwounds == undefined || sheet.actor.data.data.attributes.wounds == undefined ||sheet.actor.data.data.attributes.maxwounds.value == undefined){
+			if(sheet.actor.system.attributes.maxwounds == undefined || sheet.actor.system.attributes.wounds == undefined ||sheet.actor.system.attributes.maxwounds.value == undefined){
 				sheet.actor.update({
 					'data.attributes.wounds.value': "0",
 					'data.attributes.maxwounds.value': "0",
 				});
 			}
-			else if(sheet.actor.data.data.attributes.wounds.value != woundstreated){
+			else if(sheet.actor.system.attributes.wounds.value != woundstreated){
 			sheet.actor.update({
 				'data.attributes.wounds.value': woundstreated
 			});
 			}
 			//Intelligent Initiative
 			if(game.settings.get('darksheet', 'intmod')){
-				sheet.actor.data.data.attributes.init.mod = sheet.actor.data.data.abilities.int.mod;
-				sheet.actor.data.data.attributes.init.total = parseInt(sheet.actor.data.data.abilities.int.mod + sheet.actor.data.data.attributes.init.bonus + sheet.actor.data.data.attributes.init.prof);
-				document.getElementById('initiativevalue').innerHTML = "+"+sheet.actor.data.data.attributes.init.total;
+				sheet.actor.system.attributes.init.mod = sheet.actor.system.abilities.int.mod;
+				sheet.actor.system.attributes.init.total = parseInt(sheet.actor.system.abilities.int.mod + sheet.actor.system.attributes.init.bonus + sheet.actor.system.attributes.init.prof);
+				document.getElementById('initiativevalue').innerHTML = "+"+sheet.actor.system.attributes.init.total;
 			}
 		});
 
@@ -3683,9 +3683,9 @@ Hooks.on(`ready`, () => {
 			Hooks.on('renderBetterNPCActor5eSheet', (sheet, html) => {
 			let actor = sheet.object;
 			let DAC = 0;
-			var profmod = actor.data.data.attributes.prof;
-			var dexmod = actor.data.data.abilities.dex.mod;
-			var strmod = actor.data.data.abilities.str.mod;
+			var profmod = actor.system.attributes.prof;
+			var dexmod = actor.system.abilities.dex.mod;
+			var strmod = actor.system.abilities.str.mod;
 			let inventory = actor.data.items;
 			let itemid;
 			var i;
@@ -3733,9 +3733,9 @@ Hooks.on(`ready`, () => {
 			console.log("Loading NPC, adding Attack DC...");
 			let actor = sheet.object;
 			let DAC = 0;
-			var profmod = actor.data.data.attributes.prof;
-			var dexmod = actor.data.data.abilities.dex.mod;
-			var strmod = actor.data.data.abilities.str.mod;
+			var profmod = actor.system.attributes.prof;
+			var dexmod = actor.system.abilities.dex.mod;
+			var strmod = actor.system.abilities.str.mod;
 			let inventory = actor.data.items;
 			let itemid;
 			var i;
@@ -3815,7 +3815,7 @@ Hooks.on('createChatMessage', (app, html, data) => {
 
     if(item == null) return;
 
-    if (item.data.data.level == 0) {
+    if (item.system.level == 0) {
         iscantrip = true;
     }
     if (item.data.type == "spell") {
@@ -3824,7 +3824,7 @@ Hooks.on('createChatMessage', (app, html, data) => {
         return;
     }
 
-    if (!iscantrip && spellburnout && actor.data.data.attributes.autmomaticburnout && app.data.user === game.user.id || iscantrip && !game.settings.get('darksheet', 'savecantrips') && actor.data.data.attributes.autmomaticburnout && app.data.user === game.user.id) {
+    if (!iscantrip && spellburnout && actor.system.attributes.autmomaticburnout && app.data.user === game.user.id || iscantrip && !game.settings.get('darksheet', 'savecantrips') && actor.system.attributes.autmomaticburnout && app.data.user === game.user.id) {
         console.log("[Darksheet] Rolling automatic burnout for " + actor.name);
         DD.rollBurnout(actor.name);
     }
@@ -3959,7 +3959,7 @@ window.DD = class DD {
         // Rolling table, from best to worst
         const rollings = ['12', '10', '8', '6', '4'];
         // Value of the burnoutdice
-        let burnoutdie = actor.data.data.attributes.burnout.value;
+        let burnoutdie = actor.system.attributes.burnout.value;
         // find the table
         let table = game.tables.find(t => t.data.name === "Burnout Consequence");
         if (table == undefined) {
@@ -3967,19 +3967,19 @@ window.DD = class DD {
             return;
         }
         // burnoutsettings
-        let bsettings = actor.data.data.attributes.burnout.value
+        let bsettings = actor.system.attributes.burnout.value
         // magic region
-        var regionmod = parseInt(actor.data.data.attributes.regionmod.value, 10);
+        var regionmod = parseInt(actor.system.attributes.regionmod.value, 10);
         //console.log("Regionmod: "+regionmod);
         // burnoutdice changed through region
         if (regionmod < 0) {
-            var regionmodz = rollings.indexOf(actor.data.data.attributes.burnout.value) - parseInt(regionmod);
+            var regionmodz = rollings.indexOf(actor.system.attributes.burnout.value) - parseInt(regionmod);
             //console.log("Regionmodz step2 kleiner: "+regionmodz);
             if (regionmodz >= 5) {
                 regionmodz = 4;
             }
         } else {
-            var regionmodz = rollings.indexOf(actor.data.data.attributes.burnout.value) - parseInt(regionmod);
+            var regionmodz = rollings.indexOf(actor.system.attributes.burnout.value) - parseInt(regionmod);
             //console.log("Regionmodz step3 gr��er: "+regionmodz);
             if (regionmodz <= 0) {
                 regionmodz = 0;
@@ -4069,7 +4069,7 @@ window.DD = class DD {
                     });
                 }
                 // Lower burnoutdie rank
-                const new_burnoutdie = rollings.indexOf(actor.data.data.attributes.burnout.value) + 1;
+                const new_burnoutdie = rollings.indexOf(actor.system.attributes.burnout.value) + 1;
                 if (new_burnoutdie < rollings.length) {
                     actor.update({
                         'data.attributes.burnout.value': rollings[new_burnoutdie]

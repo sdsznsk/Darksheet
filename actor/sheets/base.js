@@ -263,7 +263,7 @@ export default class ActorSheet5e extends ActorSheet {
         attribution.push({
           label: hasArmor ? this.actor.armor.name : game.i18n.localize("DND5E.ArmorClassUnarmored"),
           mode: CONST.ACTIVE_EFFECT_MODES.OVERRIDE,
-          value: hasArmor ? this.actor.armor.data.data.armor.value : 10
+          value: hasArmor ? this.actor.armor.system.armor.value : 10
         });
         if ( ac.dex !== 0 ) {
           attribution.push({
@@ -803,7 +803,7 @@ export default class ActorSheet5e extends ActorSheet {
       });
       if ( similarItem ) {
         return similarItem.update({
-          'data.quantity': similarItem.data.data.quantity + Math.max(itemData.data.quantity, 1)
+          'data.quantity': similarItem.system.quantity + Math.max(itemData.data.quantity, 1)
         });
       }
     }
@@ -822,7 +822,7 @@ export default class ActorSheet5e extends ActorSheet {
   async _onSpellSlotOverride (event) {
     const span = event.currentTarget.parentElement;
     const level = span.dataset.level;
-    const override = this.actor.data.data.spells[level].override || span.dataset.slots;
+    const override = this.actor.system.spells[level].override || span.dataset.slots;
     const input = document.createElement("INPUT");
     input.type = "text";
     input.name = `data.spells.${level}.override`;
@@ -847,7 +847,7 @@ export default class ActorSheet5e extends ActorSheet {
       event.preventDefault();
       const itemId = event.currentTarget.closest(".item").dataset.itemId;
       const item = this.actor.items.get(itemId);
-      const uses = Math.clamped(0, parseInt(event.target.value), item.data.data.uses.max);
+      const uses = Math.clamped(0, parseInt(event.target.value), item.system.uses.max);
       event.target.value = uses;
       return item.update({ 'data.uses.value': uses });
   }

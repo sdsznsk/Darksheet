@@ -125,7 +125,7 @@ export default class ActorSheet5eCharacter extends ActorSheet5e {
     // Organize Inventory or Item Slots
     let totalWeight = 0;
 	let pct = 0;
-	let maxpct = parseInt(data.data.attributes.inventoryslots) + parseInt(this.actor.data.data.abilities.str.mod);
+	let maxpct = parseInt(data.data.attributes.inventoryslots) + parseInt(this.actor.system.abilities.str.mod);
 	
 	if ( game.settings.get("darksheet", "slotbasedinventory") ) {
     for ( let i of items ) {
